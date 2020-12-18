@@ -5,26 +5,26 @@ const contactsController = require('./contacts.controller');
 //Middleware
 const contactsMiddleware = require('./contacts.middleware');
 
+const { listContacts, getContactById } = contactsController;
+const { addContact, removeContact, updateContact } = contactsController;
+const { validateCreateContact, validateUpdateContact } = contactsMiddleware;
+
 //Init router
 const contactRouter = Router();
 
 // @ GET /api/contacts
-contactRouter.get('/', contactsController.listContacts);
+contactRouter.get('/', listContacts);
 
 // @ GET /api/contacts/:contactId
-contactRouter.get('/:contactId', contactsController.getContactById);
+contactRouter.get('/:contactId', getContactById);
 
 // @ POST /api/contacts
-contactRouter.post('/', contactsMiddleware.validateCreateContact, contactsController.addContact);
+contactRouter.post('/', validateCreateContact, addContact);
 
 // @ DELETE /api/contacts/:contactId
-contactRouter.delete('/:contactId', contactsController.removeContact);
+contactRouter.delete('/:contactId', removeContact);
 
 // @ PATCH /api/contacts/:contactId
-contactRouter.patch(
-	'/:contactId',
-	contactsMiddleware.validateUpdateContact,
-	contactsController.updateContact,
-);
+contactRouter.patch('/:contactId', validateUpdateContact, updateContact);
 
 module.exports = contactRouter;

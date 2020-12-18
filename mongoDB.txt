@@ -1,0 +1,3 @@
+cross_admin
+pr0z-c0rp0r@+10n
+mongodb+srv://cross_admin:pr0z-c0rp0r@+10n@cluster0.8scjx.mongodb.net/db-contacts?retryWrites=true&w=majority

@@ -1,9 +1,12 @@
 //Core
 const express = require('express');
+const morgan = require('morgan');
 //Middleware
 const cors = require('cors');
 //Routes
 const contactRouter = require('./contacts/contacts.router');
+//Handle logs
+const accessLogStream = require('./accessLogStream');
 
 class ContactsServer {
 	//Initial server
@@ -28,6 +31,7 @@ class ContactsServer {
 	//Init middleware
 	initMiddleware() {
 		this.server.use(express.json());
+		this.server.use(morgan('combined', { stream: accessLogStream }));
 		this.server.use(cors({ origin: 'http://localhost:3000' }));
 	}
 
