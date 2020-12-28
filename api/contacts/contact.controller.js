@@ -1,5 +1,5 @@
 //Model
-const contactModel = require('./contacts.model');
+const contactModel = require('./contact.model');
 
 //Read: return contacts list
 async function listContacts(req, res, next) {
@@ -67,4 +67,37 @@ async function updateContact(req, res, next) {
 	}
 }
 
-module.exports = { listContacts, addContact, removeContact, getContactById, updateContact };
+//Read: return contacts list with pagination (page - min=1, limit - min=5)
+async function paginationContact(req, res, next) {
+	const { page, limit } = req.query;
+
+	if (!page && !limit) {
+		next();
+	}
+
+	const option = {
+		page: Number(page) < 1 ? 1 : Number(page),
+		limit: Number(limit) < 5 ? 5 : Number(limit),
+	};
+
+	const results = await contactModel.paginate({}, option);
+
+	const response = {
+		data: results.docs,
+		limitData: results.limit,
+		totalData: results.totalDocs,
+		page: results.page,
+		totalPages: results.totalPages,
+	};
+
+	return res.status(200).json(response);
+}
+
+module.exports = {
+	listContacts,
+	addContact,
+	removeContact,
+	getContactById,
+	updateContact,
+	paginationContact,
+};

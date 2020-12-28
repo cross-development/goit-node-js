@@ -1,19 +1,26 @@
 //Core
 const { Router } = require('express');
 //Controller
-const contactsController = require('./contacts.controller');
+const contactsController = require('./contact.controller');
 //Middleware
-const contactsMiddleware = require('./contacts.middleware');
+const contactsMiddleware = require('./contact.middleware');
 
-const { listContacts, getContactById } = contactsController;
-const { addContact, removeContact, updateContact } = contactsController;
+const {
+	listContacts,
+	getContactById,
+	addContact,
+	removeContact,
+	updateContact,
+	paginationContact,
+} = contactsController;
+
 const { validateCreateContact, validateUpdateContact, validateContactID } = contactsMiddleware;
 
 //Init router
 const contactRouter = Router();
 
-// @ GET /api/contacts
-contactRouter.get('/', listContacts);
+// @ GET /api/contacts or /api/contacts?page=1&limit=10
+contactRouter.get('/', paginationContact, listContacts);
 
 // @ GET /api/contacts/:contactId
 contactRouter.get('/:contactId', validateContactID, getContactById);

@@ -15,7 +15,6 @@ function validateCreateContact(req, res, next) {
 			.required(),
 		subscription: Joi.string().required(),
 		password: Joi.string().min(6).max(20).required(),
-		token: Joi.string().token(),
 	});
 
 	const validatedContact = createContactRules.validate(req.body);
