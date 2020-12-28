@@ -6,7 +6,8 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 //Routes
-const contactRouter = require('./contacts/contacts.router');
+const contactRouter = require('./contacts/contact.router');
+const userRouter = require('./users/user.router');
 //Handle logs
 const accessLogStream = require('./accessLogStream');
 
@@ -41,6 +42,8 @@ class ContactsServer {
 	//Routes init
 	initRoutes() {
 		this.server.use('/api/contacts', contactRouter);
+		this.server.use('/api/auth', userRouter);
+		this.server.use('/api/users', userRouter);
 	}
 
 	//MongoDB init
