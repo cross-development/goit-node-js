@@ -4,9 +4,16 @@ const contactModel = require('./contact.model');
 //Read: return contacts list
 async function listContacts(req, res, next) {
 	try {
-		const contacts = await contactModel.find();
+		const contacts = await contactModel.paginate();
 
-		return res.status(200).json(contacts);
+		const response = {
+			results: contacts.docs,
+			totalResults: contacts.totalDocs,
+			page: contacts.page,
+			totalPages: contacts.totalPages,
+		};
+
+		return res.status(200).json(response);
 	} catch (error) {
 		next(error);
 	}
@@ -68,29 +75,46 @@ async function updateContact(req, res, next) {
 }
 
 //Read: return contacts list with pagination (page - min=1, limit - min=5)
-async function paginationContact(req, res, next) {
+async function paginationContacts(req, res, next) {
 	const { page, limit } = req.query;
 
-	if (!page && !limit) {
-		next();
+	if (page || limit) {
+		const defaultPage = 1;
+		const defaultLimit = 5;
+		
+		const isPageValid = Number(page) && Number(page) > defaultPage;
+		const isLimitValid = Number(limit) && Number(limit) > defaultLimit;
+
+		const option = {
+			page: isPageValid ? Number(page) : defaultPage,
+			limit: isLimitValid ? Number(limit) : defaultLimit,
+		};
+
+		const contacts = await contactModel.paginate({}, option);
+
+		const response = {
+			results: contacts.docs,
+			limitResults: contacts.limit,
+			totalResults: contacts.totalDocs,
+			page: contacts.page,
+			totalPages: contacts.totalPages,
+		};
+
+		return res.status(200).json(response);
 	}
 
-	const option = {
-		page: Number(page) < 1 ? 1 : Number(page),
-		limit: Number(limit) < 5 ? 5 : Number(limit),
-	};
+	next();
+}
 
-	const results = await contactModel.paginate({}, option);
+//Read: return filtered contact list (query --> sub)
+async function filtrationContacts(req, res, next) {
+	if (req.query.sub) {
+		const filteredContacts = await contactModel.find({ subscription: req.query.sub });
 
-	const response = {
-		data: results.docs,
-		limitData: results.limit,
-		totalData: results.totalDocs,
-		page: results.page,
-		totalPages: results.totalPages,
-	};
+		return res.status(200).json(filteredContacts);
+	}
 
-	return res.status(200).json(response);
+	next();
 }
 
 module.exports = {
@@ -99,5 +123,6 @@ module.exports = {
 	removeContact,
 	getContactById,
 	updateContact,
-	paginationContact,
+	paginationContacts,
+	filtrationContacts,
 };
