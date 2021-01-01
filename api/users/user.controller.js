@@ -45,12 +45,14 @@ async function signInUser(req, res, next) {
 			expiresIn: '24h',
 		});
 
+		await userModel.findByIdAndUpdate(user._id, { token: userToken });
+
 		const response = {
-			token: userToken,
 			user: {
 				email: user.email,
 				subscription: user.subscription,
 			},
+			token: userToken,
 		};
 
 		return res.status(200).json(response);
@@ -59,9 +61,37 @@ async function signInUser(req, res, next) {
 	}
 }
 
-async function signOutUser(req, res, next) {}
+async function signOutUser(req, res, next) {
+	try {
+		const user = await userModel.findById(req.userId);
 
-async function getCurrentUser(req, res, next) {}
+		if (!user) {
+			return res.status(401).json({ message: 'Not authorized' });
+		}
+
+		await userModel.findByIdAndUpdate(user._id, { token: '' });
+
+		return res.status(204).send();
+	} catch (error) {
+		next(error);
+	}
+}
+
+async function getCurrentUser(req, res, next) {
+	try {
+		const user = await userModel.findById(req.userId);
+
+		if (!user) {
+			return res.status(401).json({ message: 'Not authorized' });
+		}
+
+		const { email, subscription } = user;
+
+		return res.status(200).json({ email, subscription });
+	} catch (error) {
+		next(error);
+	}
+}
 
 async function updateUserSubscription(req, res, next) {}
 
