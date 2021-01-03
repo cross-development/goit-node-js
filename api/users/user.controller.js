@@ -63,9 +63,10 @@ async function signInUser(req, res, next) {
 
 async function signOutUser(req, res, next) {
 	try {
-		const user = await userModel.findById(req.userId);
+		const { userId, token } = req.user;
+		const user = await userModel.findById(userId);
 
-		if (!user) {
+		if (!user || user.token !== token) {
 			return res.status(401).json({ message: 'Not authorized' });
 		}
 
@@ -79,7 +80,7 @@ async function signOutUser(req, res, next) {
 
 async function getCurrentUser(req, res, next) {
 	try {
-		const user = await userModel.findById(req.userId);
+		const user = await userModel.findById(req.user.userId);
 
 		if (!user) {
 			return res.status(401).json({ message: 'Not authorized' });

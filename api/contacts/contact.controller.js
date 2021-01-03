@@ -4,10 +4,18 @@ const contactModel = require('./contact.model');
 //Read: return contacts list
 async function listContacts(req, res, next) {
 	try {
-		const contacts = await contactModel.paginate();
+		const { page, limit } = req.query;
+
+		const options = {
+			page: page || 1,
+			limit: limit || 20,
+		};
+
+		const contacts = await contactModel.paginate({}, page || limit ? options : null);
 
 		const response = {
 			results: contacts.docs,
+			limitResults: contacts.limit,
 			totalResults: contacts.totalDocs,
 			page: contacts.page,
 			totalPages: contacts.totalPages,
@@ -74,38 +82,6 @@ async function updateContact(req, res, next) {
 	}
 }
 
-//Read: return contacts list with pagination (page - min=1, limit - min=5)
-async function paginationContacts(req, res, next) {
-	const { page, limit } = req.query;
-
-	if (page || limit) {
-		const defaultPage = 1;
-		const defaultLimit = 5;
-		
-		const isPageValid = Number(page) && Number(page) > defaultPage;
-		const isLimitValid = Number(limit) && Number(limit) > defaultLimit;
-
-		const option = {
-			page: isPageValid ? Number(page) : defaultPage,
-			limit: isLimitValid ? Number(limit) : defaultLimit,
-		};
-
-		const contacts = await contactModel.paginate({}, option);
-
-		const response = {
-			results: contacts.docs,
-			limitResults: contacts.limit,
-			totalResults: contacts.totalDocs,
-			page: contacts.page,
-			totalPages: contacts.totalPages,
-		};
-
-		return res.status(200).json(response);
-	}
-
-	next();
-}
-
 //Read: return filtered contact list (query --> sub)
 async function filtrationContacts(req, res, next) {
 	if (req.query.sub) {
@@ -123,6 +99,5 @@ module.exports = {
 	removeContact,
 	getContactById,
 	updateContact,
-	paginationContacts,
 	filtrationContacts,
 };

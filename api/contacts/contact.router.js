@@ -11,18 +11,21 @@ const {
 	addContact,
 	removeContact,
 	updateContact,
-	paginationContacts,
 	filtrationContacts,
 } = contactsController;
 
-const { validateCreateContact, validateUpdateContact, validateContactID } = contactsMiddleware;
+const {
+	validateCreateContact,
+	validateUpdateContact,
+	validateContactID,
+	validateContactPage,
+} = contactsMiddleware;
 
 //Init router
 const contactRouter = Router();
-// Сделать фильтрацию контактов по типу подписки (GET /contacts?sub=free)
 
 // @ GET /api/contacts or /contacts?sub=free or /api/contacts?page=1&limit=10
-contactRouter.get('/', filtrationContacts, paginationContacts, listContacts);
+contactRouter.get('/', filtrationContacts, validateContactPage, listContacts);
 
 // @ GET /api/contacts/:contactId
 contactRouter.get('/:contactId', validateContactID, getContactById);

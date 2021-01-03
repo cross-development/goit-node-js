@@ -56,4 +56,35 @@ function validateContactID(req, res, next) {
 	next();
 }
 
-module.exports = { validateCreateContact, validateUpdateContact, validateContactID };
+function validateContactPage(req, res, next) {
+	const { page, limit } = req.query;
+
+	if (!page && page !== '') {
+		return next();
+	}
+
+	const isPageValid = Number(page) && Number(page) >= 1;
+
+	if (!isPageValid) {
+		return res.status(400).send({ message: 'The page must be a number and more than 0' });
+	}
+
+	if (!limit && limit !== '') {
+		return next();
+	}
+
+	const isLimitValid = Number(limit) && Number(limit) >= 20;
+
+	if (!isLimitValid) {
+		return res.status(400).send({ message: 'The limit must be a number and more than 20' });
+	}
+
+	next();
+}
+
+module.exports = {
+	validateCreateContact,
+	validateUpdateContact,
+	validateContactID,
+	validateContactPage,
+};

@@ -51,8 +51,7 @@ async function validateUserToken(req, res, next) {
 
 		try {
 			const userId = await jwt.verify(token, process.env.JWT_SECRET_KEY).userId;
-
-			req.userId = userId;
+			req.user = { userId, token };
 
 			next();
 		} catch (err) {

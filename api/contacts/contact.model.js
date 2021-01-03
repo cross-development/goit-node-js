@@ -11,6 +11,11 @@ const contactSchema = new Schema({
 	token: String,
 });
 
+mongoosePaginate.paginate.options = {
+	lean: true,
+	limit: 20,
+};
+
 contactSchema.plugin(mongoosePaginate);
 
 module.exports = model('Contact', contactSchema);
