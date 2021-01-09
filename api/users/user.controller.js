@@ -15,11 +15,11 @@ async function singUpUser(req, res, next) {
 		}
 
 		const encryptedPassword = await bcrypt.hash(password, parseInt(process.env.BCRYPT_SALT_ROUND));
-		const user = { email, password: encryptedPassword };
 
-		await userModel.create(user);
+		const user = await userModel.create({ email, password: encryptedPassword });
+		const response = { user: { email: user.email, subscription: user.subscription } };
 
-		return res.status(201).json({ email: user.email, subscription: 'free' });
+		return res.status(201).json(response);
 	} catch (error) {
 		next(error);
 	}
@@ -41,18 +41,18 @@ async function signInUser(req, res, next) {
 			return res.status(401).json({ message: 'Email or password is wrong' });
 		}
 
-		const userToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY, {
+		const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY, {
 			expiresIn: '24h',
 		});
 
-		await userModel.findByIdAndUpdate(user._id, { token: userToken });
+		await userModel.findByIdAndUpdate(user._id, { token }, { new: true });
 
 		const response = {
+			token,
 			user: {
 				email: user.email,
 				subscription: user.subscription,
 			},
-			token: userToken,
 		};
 
 		return res.status(200).json(response);
@@ -63,14 +63,7 @@ async function signInUser(req, res, next) {
 
 async function signOutUser(req, res, next) {
 	try {
-		const { userId, token } = req.user;
-		const user = await userModel.findById(userId);
-
-		if (!user || user.token !== token) {
-			return res.status(401).json({ message: 'Not authorized' });
-		}
-
-		await userModel.findByIdAndUpdate(user._id, { token: '' });
+		await userModel.findByIdAndUpdate(req.user._id, { token: '' });
 
 		return res.status(204).send();
 	} catch (error) {
@@ -80,13 +73,7 @@ async function signOutUser(req, res, next) {
 
 async function getCurrentUser(req, res, next) {
 	try {
-		const user = await userModel.findById(req.user.userId);
-
-		if (!user) {
-			return res.status(401).json({ message: 'Not authorized' });
-		}
-
-		const { email, subscription } = user;
+		const { email, subscription } = req.user;
 
 		return res.status(200).json({ email, subscription });
 	} catch (error) {
@@ -94,7 +81,21 @@ async function getCurrentUser(req, res, next) {
 	}
 }
 
-async function updateUserSubscription(req, res, next) {}
+async function updateUserSubscription(req, res, next) {
+	try {
+		const {
+			body: { subscription },
+			user: { _id },
+		} = req;
+
+		const updatedUser = await userModel.findByIdAndUpdate(_id, { subscription }, { new: true });
+		const response = { email: updatedUser.email, subscription: updatedUser.subscription };
+
+		return res.status(200).send(response);
+	} catch (error) {
+		next(error);
+	}
+}
 
 module.exports = {
 	singUpUser,

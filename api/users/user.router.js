@@ -18,6 +18,7 @@ const {
 	validateSignInUser,
 	validateUserToken,
 	validateUserID,
+	validateSub,
 } = userMiddleware;
 
 const userRouter = Router();
@@ -34,7 +35,7 @@ userRouter.post('/logout', validateUserToken, signOutUser);
 // @ GET /api/users/current
 userRouter.get('/current', validateUserToken, getCurrentUser);
 
-// @ PATCH /api/users/:userId
-userRouter.patch('/:userId', validateUserID, updateUserSubscription);
+// @ PATCH /api/users/:id
+userRouter.patch('/:id', validateUserID, validateUserToken, validateSub, updateUserSubscription);
 
 module.exports = userRouter;

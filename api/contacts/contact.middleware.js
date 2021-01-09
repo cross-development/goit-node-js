@@ -1,20 +1,30 @@
 //Validation package
 const Joi = require('joi');
+//Configs
+const configs = require('../../configs/configs');
 //Mongoose validation ObjID
 const {
 	Types: { ObjectId },
 } = require('mongoose');
 
+const {
+	nameLengthMin,
+	nameLengthMax,
+	passLengthMin,
+	passLengthMax,
+	phonePattern,
+} = configs.contacts;
+
+const { pageNumberMin, limitNumberMin, subscriptionEnum } = configs.queryParams;
+
 //The middleware validate contact credential (create)
 function validateCreateContact(req, res, next) {
 	const createContactRules = Joi.object({
-		name: Joi.string().min(3).max(30).required(),
+		name: Joi.string().min(nameLengthMin).max(nameLengthMax).required(),
 		email: Joi.string().email().required(),
-		phone: Joi.string()
-			.pattern(/^\([0-9]{3}\) [0-9]{3}-[0-9]{4}$/)
-			.required(),
+		phone: Joi.string().pattern(phonePattern).required(),
 		subscription: Joi.string().required(),
-		password: Joi.string().min(6).max(20).required(),
+		password: Joi.string().min(passLengthMin).max(passLengthMax).required(),
 	});
 
 	const validatedContact = createContactRules.validate(req.body);
@@ -29,11 +39,11 @@ function validateCreateContact(req, res, next) {
 //The middleware validate contact credential (update)
 function validateUpdateContact(req, res, next) {
 	const updateContactRules = Joi.object({
-		name: Joi.string().min(3).max(30),
+		name: Joi.string().min(nameLengthMin).max(nameLengthMax),
 		email: Joi.string().email(),
-		phone: Joi.string().pattern(/^\([0-9]{3}\) [0-9]{3}-[0-9]{4}$/),
+		phone: Joi.string().pattern(phonePattern),
 		subscription: Joi.string(),
-		password: Joi.string().min(6).max(20),
+		password: Joi.string().min(passLengthMin).max(passLengthMax),
 	}).min(1);
 
 	const validatedContact = updateContactRules.validate(req.body);
@@ -47,37 +57,32 @@ function validateUpdateContact(req, res, next) {
 
 //The middleware validate contact id (read, delete, update)
 function validateContactID(req, res, next) {
-	const { contactId } = req.params;
+	const { id } = req.params;
 
-	if (!ObjectId.isValid(contactId)) {
+	if (!ObjectId.isValid(id)) {
 		return res.status(400).send({ message: 'invalid id' });
 	}
 
 	next();
 }
 
-function validateContactPage(req, res, next) {
-	const { page, limit } = req.query;
+//The middleware validate query params (each of the parameters is optional)
+function validateQueryParams(req, res, next) {
+	const createQueryRules = Joi.object({
+		page: Joi.number().min(pageNumberMin).default(pageNumberMin),
+		limit: Joi.number().min(limitNumberMin).default(limitNumberMin),
+		sub: Joi.string().valid(...subscriptionEnum),
+	});
 
-	if (!page && page !== '') {
-		return next();
+	const validatedQueryParams = createQueryRules.validate(req.query);
+
+	if (validatedQueryParams.error) {
+		const message = validatedQueryParams.error.details[0].message;
+
+		return res.status(400).json({ message });
 	}
 
-	const isPageValid = Number(page) && Number(page) >= 1;
-
-	if (!isPageValid) {
-		return res.status(400).send({ message: 'The page must be a number and more than 0' });
-	}
-
-	if (!limit && limit !== '') {
-		return next();
-	}
-
-	const isLimitValid = Number(limit) && Number(limit) >= 20;
-
-	if (!isLimitValid) {
-		return res.status(400).send({ message: 'The limit must be a number and more than 20' });
-	}
+	req.query = validatedQueryParams.value;
 
 	next();
 }
@@ -86,5 +91,5 @@ module.exports = {
 	validateCreateContact,
 	validateUpdateContact,
 	validateContactID,
-	validateContactPage,
+	validateQueryParams,
 };

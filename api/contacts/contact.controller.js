@@ -1,25 +1,17 @@
 //Model
 const contactModel = require('./contact.model');
+//Utils
+const prettyResponse = require('../../utils/prettyResponse');
 
 //Read: return contacts list
 async function listContacts(req, res, next) {
 	try {
-		const { page, limit } = req.query;
+		const { page, limit, sub } = req.query;
 
-		const options = {
-			page: page || 1,
-			limit: limit || 20,
-		};
+		const query = sub ? { subscription: sub } : {};
 
-		const contacts = await contactModel.paginate({}, page || limit ? options : null);
-
-		const response = {
-			results: contacts.docs,
-			limitResults: contacts.limit,
-			totalResults: contacts.totalDocs,
-			page: contacts.page,
-			totalPages: contacts.totalPages,
-		};
+		const results = await contactModel.paginate(query, { page, limit });
+		const response = prettyResponse(results);
 
 		return res.status(200).json(response);
 	} catch (error) {
@@ -30,8 +22,8 @@ async function listContacts(req, res, next) {
 //Read: return contact by id
 async function getContactById(req, res, next) {
 	try {
-		const { contactId } = req.params;
-		const contact = await contactModel.findOne({ _id: contactId });
+		const { id: _id } = req.params;
+		const contact = await contactModel.findOne({ _id });
 
 		!contact ? res.status(404).json({ message: 'Not found' }) : res.status(200).json(contact);
 	} catch (error) {
@@ -53,8 +45,8 @@ async function addContact(req, res, next) {
 //Delete: remove contact by id
 async function removeContact(req, res, next) {
 	try {
-		const { contactId } = req.params;
-		const removedContact = await contactModel.findByIdAndDelete(contactId);
+		const { id } = req.params;
+		const removedContact = await contactModel.findByIdAndDelete(id);
 
 		!removedContact
 			? res.status(404).json({ message: 'Not found' })
@@ -67,9 +59,9 @@ async function removeContact(req, res, next) {
 //Update: update contact information by id
 async function updateContact(req, res, next) {
 	try {
-		const { contactId } = req.params;
+		const { id } = req.params;
 		const updatedContact = await contactModel.findByIdAndUpdate(
-			contactId,
+			id,
 			{ $set: req.body },
 			{ new: true },
 		);
@@ -82,22 +74,10 @@ async function updateContact(req, res, next) {
 	}
 }
 
-//Read: return filtered contact list (query --> sub)
-async function filtrationContacts(req, res, next) {
-	if (req.query.sub) {
-		const filteredContacts = await contactModel.find({ subscription: req.query.sub });
-
-		return res.status(200).json(filteredContacts);
-	}
-
-	next();
-}
-
 module.exports = {
 	listContacts,
 	addContact,
 	removeContact,
 	getContactById,
 	updateContact,
-	filtrationContacts,
 };

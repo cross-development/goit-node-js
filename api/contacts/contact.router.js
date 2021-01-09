@@ -11,21 +11,20 @@ const {
 	addContact,
 	removeContact,
 	updateContact,
-	filtrationContacts,
 } = contactsController;
 
 const {
 	validateCreateContact,
 	validateUpdateContact,
 	validateContactID,
-	validateContactPage,
+	validateQueryParams,
 } = contactsMiddleware;
 
 //Init router
 const contactRouter = Router();
 
-// @ GET /api/contacts or /contacts?sub=free or /api/contacts?page=1&limit=10
-contactRouter.get('/', filtrationContacts, validateContactPage, listContacts);
+// @ GET /api/contacts (can be requested with next params: sub=free, page=1, limit=10)
+contactRouter.get('/', validateQueryParams, listContacts);
 
 // @ GET /api/contacts/:contactId
 contactRouter.get('/:contactId', validateContactID, getContactById);
@@ -33,10 +32,10 @@ contactRouter.get('/:contactId', validateContactID, getContactById);
 // @ POST /api/contacts
 contactRouter.post('/', validateCreateContact, addContact);
 
-// @ DELETE /api/contacts/:contactId
-contactRouter.delete('/:contactId', validateContactID, removeContact);
+// @ DELETE /api/contacts/:id
+contactRouter.delete('/:id', validateContactID, removeContact);
 
-// @ PATCH /api/contacts/:contactId
-contactRouter.patch('/:contactId', validateContactID, validateUpdateContact, updateContact);
+// @ PATCH /api/contacts/:id
+contactRouter.patch('/:id', validateContactID, validateUpdateContact, updateContact);
 
 module.exports = contactRouter;

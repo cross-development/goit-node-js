@@ -1,17 +1,23 @@
+//Models
+const userModel = require('./user.model');
+//Configs
+const configs = require('../../configs/configs');
 //Validation package
 const Joi = require('joi');
-//Decode jwt
+//Crypt
 const jwt = require('jsonwebtoken');
 //Mongoose validation ObjID
 const {
 	Types: { ObjectId },
 } = require('mongoose');
 
+const { passLengthMin, passLengthMax, subscriptionEnum } = configs.users;
+
 //The middleware validate to register user
 function validateSignUpUser(req, res, next) {
 	const createRegisterRules = Joi.object({
 		email: Joi.string().email().required(),
-		password: Joi.string().min(6).max(20).required(),
+		password: Joi.string().min(passLengthMin).max(passLengthMax).required(),
 	});
 
 	const validatedRegister = createRegisterRules.validate(req.body);
@@ -29,7 +35,7 @@ function validateSignUpUser(req, res, next) {
 function validateSignInUser(req, res, next) {
 	const createLoginRules = Joi.object({
 		email: Joi.string().email().required(),
-		password: Joi.string().min(6).max(20).required(),
+		password: Joi.string().min(passLengthMin).max(passLengthMax).required(),
 	});
 
 	const validatedLogin = createLoginRules.validate(req.body);
@@ -46,12 +52,18 @@ function validateSignInUser(req, res, next) {
 //The middleware validate user token
 async function validateUserToken(req, res, next) {
 	try {
-		const authorizationHeader = req.get('Authorization');
+		const authorizationHeader = req.get('Authorization') || '';
 		const token = authorizationHeader.replace('Bearer ', '');
 
 		try {
 			const userId = await jwt.verify(token, process.env.JWT_SECRET_KEY).userId;
-			req.user = { userId, token };
+			const user = await userModel.findById(userId);
+
+			if (!user || user.token !== token) {
+				return res.status(401).json({ message: 'Not authorized' });
+			}
+
+			req.user = user;
 
 			next();
 		} catch (err) {
@@ -62,12 +74,23 @@ async function validateUserToken(req, res, next) {
 	}
 }
 
-//The middleware validate user id (update)
+//The middleware validate user id
 function validateUserID(req, res, next) {
-	const { userId } = req.params;
+	const { id } = req.params;
 
-	if (!ObjectId.isValid(userId)) {
+	if (!ObjectId.isValid(id)) {
 		return res.status(400).send({ message: 'invalid id' });
+	}
+
+	next();
+}
+
+//The middleware validate user subscription
+function validateSub(req, res, next) {
+	const { subscription } = req.body;
+
+	if (!subscriptionEnum.includes(subscription)) {
+		return res.status(400).send({ message: 'invalid subscription' });
 	}
 
 	next();
@@ -78,4 +101,5 @@ module.exports = {
 	validateSignInUser,
 	validateUserToken,
 	validateUserID,
+	validateSub,
 };
