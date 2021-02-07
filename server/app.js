@@ -26,7 +26,7 @@ class ContactsServer {
 		this.initMiddleware();
 		this.initRoutes();
 		await this.initDatabase();
-		this.startListening();
+		return this.startListening();
 	}
 
 	//Server init
@@ -68,7 +68,7 @@ class ContactsServer {
 
 	//Start listening on port 3001
 	startListening() {
-		this.server.listen(this.port, () => {
+		return this.server.listen(this.port, () => {
 			console.log('Server started listening on port', this.port);
 		});
 	}

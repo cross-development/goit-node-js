@@ -1,4 +1,4 @@
 //Server
-const ContactsServer = require('./server');
+const ContactsServer = require('./app');
 
 new ContactsServer().start();

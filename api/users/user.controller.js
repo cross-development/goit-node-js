@@ -28,7 +28,7 @@ async function updateUserSubscription(req, res, next) {
 		const updatedUser = await userModel.findByIdAndUpdate(_id, { subscription }, { new: true });
 		const response = { email: updatedUser.email, subscription: updatedUser.subscription };
 
-		return res.status(200).send(response);
+		return res.status(200).json(response);
 	} catch (error) {
 		next(error);
 	}
@@ -56,7 +56,7 @@ async function updateUserAvatar(req, res, next) {
 
 		const response = { avatarURL: updatedUser.avatarURL };
 
-		return res.status(200).send(response);
+		return res.status(200).json(response);
 	} catch (error) {
 		next(error);
 	}
