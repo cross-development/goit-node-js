@@ -1,8 +1,10 @@
 module.exports = {
+	subscriptionEnum: ['free', 'pro', 'premium'],
+
 	users: {
-		passLengthMin: 6,
-		passLengthMax: 20,
-		subscriptionEnum: ['free', 'pro', 'premium'],
+		userPassLengthMin: 6,
+		userPassLengthMax: 20,
+		userSubscription: this.subscriptionEnum,
 	},
 
 	contacts: {
@@ -16,6 +18,6 @@ module.exports = {
 	queryParams: {
 		pageNumberMin: 1,
 		limitNumberMin: 20,
-		subscriptionEnum: ['free', 'pro', 'premium'],
+		paramsSubscription: this.subscriptionEnum,
 	},
 };
