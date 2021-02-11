@@ -16,6 +16,8 @@ const userSchema = new Schema({
 		default: 'free',
 	},
 	token: { type: String, required: false },
+	verificationToken: { type: String, required: false },
+	isVerified: { type: Boolean, required: false, default: false },
 });
 
 module.exports = model('User', userSchema);
