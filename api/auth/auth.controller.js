@@ -1,11 +1,14 @@
 //Models
 const userModel = require('../users/user.model');
 //Crypt
+const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 //Helpers
 const generateAvatar = require('../../helpers/avatarGenerator');
 const imageCompressor = require('../../helpers/imageCompressor');
+//Services
+const sendEmail = require('../../services/email');
 
 //Gets user credential from the request, checks email, create password hash, create a new user and return it
 async function singUpUser(req, res, next) {
@@ -19,18 +22,21 @@ async function singUpUser(req, res, next) {
 		}
 
 		const encryptedPassword = await bcrypt.hash(password, parseInt(process.env.BCRYPT_SALT_ROUND));
+		const verificationToken = await crypto.randomBytes(16).toString('hex');
 		const userAvatar = await generateAvatar(next);
 		await imageCompressor(userAvatar);
 
 		const user = await userModel.create({
 			email,
 			password: encryptedPassword,
+			verificationToken,
 			avatarURL: process.env.AVATAR_URL + userAvatar,
 		});
 
-		const response = {
-			user: { email, subscription: user.subscription, avatarURL: user.avatarURL },
-		};
+		const { isVerified, avatarURL, subscription } = user;
+		const response = { user: { email, isVerified, avatarURL, subscription } };
+
+		await sendEmail(user.email, verificationToken);
 
 		return res.status(201).json(response);
 	} catch (error) {

@@ -82,6 +82,29 @@ async function validateUserToken(req, res, next) {
 	}
 }
 
+//The middleware for verification email token
+async function verificationEmailToken(req, res, next) {
+	try {
+		const { verificationToken } = req.params;
+
+		const user = await userModel.findOne({ verificationToken });
+
+		if (!user) {
+			return res.status(404).json({ message: 'User not found' });
+		}
+
+		await userModel.findByIdAndUpdate(
+			user._id,
+			{ $unset: { verificationToken: '' }, $set: { isVerified: true } },
+			{ new: true },
+		);
+
+		return res.status(200).send();
+	} catch (err) {
+		next(err);
+	}
+}
+
 //The middleware validate query params (each of the parameters is optional)
 function validateQueryParams(req, res, next) {
 	const createQueryRules = Joi.object({
@@ -167,6 +190,7 @@ module.exports = {
 	validateSignUpUser,
 	validateSignInUser,
 	validateUserToken,
+	verificationEmailToken,
 	validateQueryParams,
 	validateSub,
 	validateId,
